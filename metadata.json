@@ -1,0 +1,6 @@
+{
+  "name": "Fruit Slot Machine",
+  "description": "A classic fruit slot machine game built with React, Framer Motion, and Wagmi/Viem, featuring juicy animations and on-chain capability.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
