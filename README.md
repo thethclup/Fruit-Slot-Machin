@@ -1,31 +1,69 @@
 # Fruit Slot Orchestrator
 
-A fully-immersive mobile-first classic fruit slot machine game built with React, Framer Motion, and Wagmi/Viem. Provides juicy animations, and real on-chain capability for ERC-8004 and ERC-8021 standards on Base Mainnet.
+Fruit Slot Orchestrator is an AI Agent built on the Fruit Slot platform that serves as a smart orchestrator for slot machine mechanics, fruit combination logic, reward optimization, and multi-slot orchestration.
 
-## Overview
-**Fruit Slot Machine** is a beautifully crafted slot game that connects seamlessly with Web3. Players can trigger satisfying reel spin mechanics, catch combos, hit multipliers (cherries, lemons, wild symbols) and record their biggest achievements transparently onto the blockchain.
+The system is fully compliant with the ERC-8004 specification and deployed on Base Mainnet (`eip155:8453`), bridging a highly fluid, animated React frontend with robust Web3 execution schemas.
 
-### Key Game Systems
-- **Fluid & Juicy Animations:** Custom easing graphs and high performance blur transitions during spins.
-- **Rewarding Combinations:** Matching combos string together multipliers. Highest combination pays out for the Wild 🌟 block.
-- **Hybrid Leaderboard:** View the top performing players on our "Luckiest Fruit Slot Players" board.
-- **Win Verification:** Integration with ERC-8021 allows true builder & source attribution for big wins sent from the UI.
-- **Smart Orchestration:** Included ERC-8004 components via `/.well-known/agent-card.json` and active API schemas at `/api/agent` and `/api/mcp` for automation interoperability and execution. 
+## Project Overview
 
-### Configuration & Deployment
-- The game is set up to natively interact with Base (`eip155:8453`).
-- **Attribution & Core Wallet Requirements:**
-  - AI Agent / Owner Wallet: `0xe157F1F5e12adB38Ba013683E9Ce24efe21e5bA6`
-  - Builder Code: `bc_ee3cipj7`
+**Fruit Slot Machine** is a beautifully crafted slot game that connects seamlessly with Web3 mechanics. Players can trigger satisfying reel spin mechanics, catch combos, hit multipliers (cherries, lemons, wild symbols), and record their highest scores safely.
 
-### Technical Specs
-- **Frontend Core:** React, `motion`, `canvas-confetti`, Tailwind CSS
-- **Smart Integration:** Wagmi v2 + Viem, SIWE transactions
-- **Backend / Orchestrator API:** Express JS runtime configured to map `MCP` and `Agent` logic.
+### Capabilities and Skills
+The AI Agent Orchestrator is equipped to handle:
+- **`slot-machine-mechanics`**: Evaluates active combinations and validates spin outcomes.
+- **`fruit-combination-logic`**: Resolves multipliers and combo connections.
+- **`reward-optimization`**: Optimizes active multipliers and payouts for each round.
+- **`multi-slot-orchestration`**: Synthesizes execution flows across automated spins.
+- **`spin-automation`**: Autonomously interacts with game triggers.
+- **`jackpot-prediction`**: Calculates highest likelihood events based on internal rules.
+- **`mcp-command-execution`**: Handles incoming API tasks and execution directives.
 
-### Endpoints
-- **Agent Discovery:** `/.well-known/agent-card.json`
-- **Agent Info Endpoint:** `/api/agent` (GET)
-- **MCP Action Gateway:** `/api/mcp` (GET / POST)
+## Tech Stack
 
-Have fun spinning!
+**Frontend Framework & Tools:**
+- React (App Router / Pages capability)
+- Next.js 14 API structure
+- Framer Motion for easing graphs and blur animations
+- `canvas-confetti` for game rewards
+- Tailwind CSS
+
+**Web3 Integration:**
+- Wagmi v2 + Viem
+- SIWE (Sign-In with Ethereum)
+
+## Setup & Running Locally
+
+1. Clone the repository and install dependencies:
+```bash
+npm install
+```
+
+2. Start the development server:
+```bash
+npm run dev
+```
+The game will start on local port `3000`.
+
+## MCP Connection Guide
+
+The system uses standard Model Context Protocol (MCP) interactions to handle remote orchestrations and agent instructions.
+
+**Endpoint Location:** `/api/mcp`
+
+The MCP route supports standard `initialize`, `tools/list`, and `tools/call` requests.
+Supported commands via tools include:
+- `get_race_status`
+- `start_race`
+- `get_leaderboard`
+- `optimize_speed`
+- `get_track_info`
+
+## Agent Registration Info
+
+The Application implements the standard `ERC-8004` Discovery endpoints.
+To locate or verify the agent's schema, you can probe the `.well-known` configuration or access the API endpoint.
+
+- **Discovery Card:** `/.well-known/agent-card.json`
+- **Agent Info Route:** `/api/agent`
+
+The agent is labeled as: **Fruit Slot Orchestrator** (Version 1.0.0).
