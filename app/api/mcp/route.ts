@@ -36,51 +36,63 @@ export async function POST(req: Request) {
     // Standard MCP Protocol matching the previous logic setup
     if (body.method === "initialize") {
       return NextResponse.json({
-        protocolVersion: "2024-11-05",
-        capabilities: { tools: {} },
-        serverInfo: {
-          name: "Fruit Slot MCP",
-          version: "1.0.0"
+        jsonrpc: "2.0",
+        id: body.id,
+        result: {
+          protocolVersion: "2024-11-05",
+          capabilities: { tools: {}, prompts: {}, resources: {} },
+          serverInfo: {
+            name: "Fruit Slot MCP",
+            version: "1.0.0"
+          }
         }
       }, { headers: corsHeaders });
     }
 
     if (body.method === "tools/list") {
       return NextResponse.json({
-        tools: [
-          {
-            name: "get_race_status",
-            description: "Get race status",
-            inputSchema: { type: "object", properties: {} }
-          },
-          {
-            name: "start_race",
-            description: "Start the race",
-            inputSchema: { type: "object", properties: {} }
-          },
-          {
-            name: "get_leaderboard",
-            description: "Get the top players",
-            inputSchema: { type: "object", properties: {} }
-          },
-          {
-            name: "optimize_speed",
-            description: "Optimize speed mechanics",
-            inputSchema: { type: "object", properties: {} }
-          },
-          {
-            name: "get_track_info",
-            description: "Get info about the track",
-            inputSchema: { type: "object", properties: {} }
-          }
-        ]
+        jsonrpc: "2.0",
+        id: body.id,
+        result: {
+          tools: [
+            {
+              name: "get_race_status",
+              description: "Get race status",
+              inputSchema: { type: "object", properties: {} }
+            },
+            {
+              name: "start_race",
+              description: "Start the race",
+              inputSchema: { type: "object", properties: {} }
+            },
+            {
+              name: "get_leaderboard",
+              description: "Get the top players",
+              inputSchema: { type: "object", properties: {} }
+            },
+            {
+              name: "optimize_speed",
+              description: "Optimize speed mechanics",
+              inputSchema: { type: "object", properties: {} }
+            },
+            {
+              name: "get_track_info",
+              description: "Get info about the track",
+              inputSchema: { type: "object", properties: {} }
+            }
+          ]
+        }
       }, { headers: corsHeaders });
     }
 
     if (body.method === "tools/call") {
       return NextResponse.json({
-        content: [{ type: "text", text: `Tool ${body.params?.name} executed successfully` }],
-        isError: false
+        jsonrpc: "2.0",
+        id: body.id,
+        result: {
+          content: [{ type: "text", text: `Tool ${body.params?.name} executed successfully` }],
+          isError: false
+        }
       }, { headers: corsHeaders });
     }
 

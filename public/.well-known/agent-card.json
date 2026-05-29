@@ -33,6 +33,15 @@
     "jackpot-prediction",
     "mcp-command-execution"
   ],
+  "skills": [
+    { "name": "slot-machine-mechanics", "description": "Evaluates active combinations" },
+    { "name": "fruit-combination-logic", "description": "Resolves multipliers" },
+    { "name": "reward-optimization", "description": "Optimizes active multipliers" },
+    { "name": "multi-slot-orchestration", "description": "Synthesizes execution flows" },
+    { "name": "spin-automation", "description": "Autonomously interacts with game triggers" },
+    { "name": "jackpot-prediction", "description": "Calculates highest likelihood events" },
+    { "name": "mcp-command-execution", "description": "Handles incoming API tasks" }
+  ],
   "supportedChains": ["eip155:8453"],
   "active": true,
   "status": "online"
