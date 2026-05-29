@@ -1,5 +1,15 @@
 import { NextResponse } from 'next/server';
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key',
+};
+
+export async function OPTIONS() {
+  return NextResponse.json({}, { headers: corsHeaders });
+}
+
 /**
  * Fruit Slot Orchestrator - Agent Info Endpoint
  * 
@@ -17,7 +27,7 @@ export async function GET() {
     version: "1.0.0",
     type: "ERC-8004 Agent",
     lastUpdated: new Date().toISOString()
-  });
+  }, { headers: corsHeaders });
 }
 
 export async function POST(req: Request) {
@@ -27,11 +37,11 @@ export async function POST(req: Request) {
       status: "success",
       message: "Agent POST route ready",
       received: body
-    });
+    }, { headers: corsHeaders });
   } catch (error) {
     return NextResponse.json({
       status: "error",
       message: "Failed to process agent request"
-    }, { status: 400 });
+    }, { status: 400, headers: corsHeaders });
   }
 }

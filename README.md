@@ -21,8 +21,7 @@ The AI Agent Orchestrator is equipped to handle:
 ## Tech Stack
 
 **Frontend Framework & Tools:**
-- React (App Router / Pages capability)
-- Next.js 14 API structure
+- Next.js 14 (App Router) / React
 - Framer Motion for easing graphs and blur animations
 - `canvas-confetti` for game rewards
 - Tailwind CSS
@@ -48,9 +47,9 @@ The game will start on local port `3000`.
 
 The system uses standard Model Context Protocol (MCP) interactions to handle remote orchestrations and agent instructions.
 
-**Endpoint Location:** `/api/mcp`
+**Endpoint Location:** `https://fruitslot.vercel.app/api/mcp`
 
-The MCP route supports standard `initialize`, `tools/list`, and `tools/call` requests.
+The MCP route supports standard `initialize`, `tools/list`, and `tools/call` POST requests.
 Supported commands via tools include:
 - `get_race_status`
 - `start_race`
@@ -63,7 +62,7 @@ Supported commands via tools include:
 The Application implements the standard `ERC-8004` Discovery endpoints.
 To locate or verify the agent's schema, you can probe the `.well-known` configuration or access the API endpoint.
 
-- **Discovery Card:** `/.well-known/agent-card.json`
-- **Agent Info Route:** `/api/agent`
+- **Discovery Card:** `https://fruitslot.vercel.app/.well-known/agent-card.json`
+- **Agent Info Route:** `https://fruitslot.vercel.app/api/agent`
 
 The agent is labeled as: **Fruit Slot Orchestrator** (Version 1.0.0).
