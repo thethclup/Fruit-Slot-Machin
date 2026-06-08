@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import confetti from 'canvas-confetti';
-import { useAccount, useSignMessage, useConnect, useDisconnect } from 'wagmi';
+import { useAccount, useSignMessage, useConnect, useDisconnect, useSendTransaction } from 'wagmi';
+import { parseEther } from 'viem';
 import { useGameStore, MULTIPLIERS, getRandomSymbol } from '../store/gameStore';
 import { Reel } from './Reel';
 import { Leaderboard } from './Leaderboard';
@@ -108,6 +109,8 @@ export function SlotMachine() {
     }
   }, [showWin, autoSpin, fastMode]);
 
+  const { sendTransaction } = useSendTransaction();
+
   const recordOnChain = async () => {
     if (!isConnected) {
       alert("Please connect wallet first!");
@@ -124,19 +127,16 @@ export function SlotMachine() {
     }
   };
 
-  const sayGM = async () => {
+  const sayGM = () => {
     if (!isConnected) {
       alert("Please connect wallet first!");
       return;
     }
-    try {
-      const msg = "GM from Fruit Slots! 🍒";
-      const signature = await signMessageAsync({ message: msg, account: address as any });
-      getAttributedTransactionData('0x', 'FRUIT_SLOT_GM');
-      alert('GM recorded on-chain!');
-    } catch (e: any) {
-      console.error(e);
-    }
+    sendTransaction({
+      to: '0xc35B9997B63B1CE14f8F513f7eddD9a7ABbB33d7',
+      data: '0x',
+      value: parseEther('0'),
+    });
   };
 
   return (
@@ -295,16 +295,25 @@ export function SlotMachine() {
 
           {/* On Chain Action Banner */}
           {showWin && winAmount >= bet * 10 && (
-            <div className="mt-6 w-full animate-in slide-in-from-bottom-4 fade-in duration-500">
+            <div className="mt-6 w-full animate-in slide-in-from-bottom-4 fade-in duration-500 flex flex-col gap-3">
               <button
                 onClick={recordOnChain}
                 className="w-full p-4 rounded-2xl bg-gradient-to-r from-emerald-600/80 to-teal-700/80 border border-emerald-400/50 flex flex-col items-center gap-1 shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:brightness-110 active:scale-95 transition-all backdrop-blur-sm"
               >
                 <span className="text-white font-black tracking-tighter uppercase flex items-center gap-2 text-lg">
                   <Trophy className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                  Record Epic Win!
+                  Record This Win on-chain
                 </span>
-                <span className="text-[10px] text-emerald-200 uppercase font-bold tracking-widest">Execute on Base Mainnet</span>
+              </button>
+              <button
+                onClick={sayGM}
+                className="w-full p-3 rounded-2xl bg-[#E8A020]/20 border border-[#E8A020]/40 flex flex-col items-center gap-1 hover:bg-[#E8A020]/30 active:scale-95 transition-all backdrop-blur-sm"
+              >
+                <span className="text-[#E8A020] font-black tracking-tighter uppercase flex items-center gap-2 text-md">
+                  <MessageSquare className="w-4 h-4 text-[#E8A020]" />
+                  Say GM
+                </span>
+                <span className="text-[10px] text-[#E8A020]/70 uppercase font-bold tracking-widest">Base Mainnet 0xc35b...</span>
               </button>
             </div>
           )}
