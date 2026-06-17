@@ -4,22 +4,44 @@
  */
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { WagmiProvider, useAccount, useSendTransaction } from 'wagmi';
+import { WagmiProvider, useAccount, useSendTransaction, useSendCalls, useChainId } from 'wagmi';
 import { config } from './config/wagmi';
 import { SlotMachine } from './components/SlotMachine';
 import { Sun } from 'lucide-react';
 import { parseEther } from 'viem';
+import { useWalletCapabilities } from './hooks/useWalletCapabilities';
 
 const queryClient = new QueryClient();
 
 function AppContent() {
   const { isConnected } = useAccount();
   const { sendTransaction } = useSendTransaction();
+  const { sendCalls } = useSendCalls();
+  const chainId = useChainId();
+  const { supportsBatching } = useWalletCapabilities(chainId);
 
   const sendGMTransaction = () => {
+    if (supportsBatching && sendCalls) {
+        sendCalls({
+           calls: [{
+               to: '0xc35B9997B63B1CE14f8F513f7eddD9a7ABbB33d7',
+               data: '0x',
+               value: BigInt(0)
+           }],
+           capabilities: {
+              dataSuffix: {
+                  value: '0x80218021802180218021802180218021',
+                  optional: true
+              }
+           }
+        });
+        return;
+    }
+
+    // 80218021802180218021802180218021 is the ERC-8021 builder code suffix
     sendTransaction({
       to: '0xc35B9997B63B1CE14f8F513f7eddD9a7ABbB33d7',
-      data: '0x',
+      data: '0x80218021802180218021802180218021',
       value: parseEther('0'),
     });
   };

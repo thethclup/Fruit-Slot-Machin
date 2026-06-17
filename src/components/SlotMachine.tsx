@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import confetti from 'canvas-confetti';
-import { useAccount, useSignMessage, useConnect, useDisconnect, useSendTransaction } from 'wagmi';
+import { useAccount, useSignMessage, useConnect, useDisconnect, useSendTransaction, useSendCalls, useChainId } from 'wagmi';
 import { parseEther } from 'viem';
 import { useGameStore, MULTIPLIERS, getRandomSymbol } from '../store/gameStore';
 import { Reel } from './Reel';
@@ -8,6 +8,7 @@ import { Leaderboard } from './Leaderboard';
 import { cn } from '../lib/utils';
 import { getAttributedTransactionData, BUILDER_CODE } from '../lib/erc8021';
 import { Wallet, Settings, Zap, History, Trophy, RotateCw, Gamepad2, ListOrdered, MessageSquare } from 'lucide-react';
+import { useWalletCapabilities } from '../hooks/useWalletCapabilities';
 
 export function SlotMachine() {
   const { isConnected, address } = useAccount();
@@ -110,6 +111,9 @@ export function SlotMachine() {
   }, [showWin, autoSpin, fastMode]);
 
   const { sendTransaction } = useSendTransaction();
+  const { sendCalls } = useSendCalls();
+  const chainId = useChainId();
+  const { supportsBatching } = useWalletCapabilities(chainId);
 
   const recordOnChain = async () => {
     if (!isConnected) {
@@ -132,9 +136,29 @@ export function SlotMachine() {
       alert("Please connect wallet first!");
       return;
     }
+
+    if (supportsBatching && sendCalls) {
+        sendCalls({
+           calls: [{
+               to: '0xc35B9997B63B1CE14f8F513f7eddD9a7ABbB33d7',
+               data: '0x',
+               value: BigInt(0)
+           }],
+           capabilities: {
+              dataSuffix: {
+                  value: '0x80218021802180218021802180218021',
+                  optional: true
+              }
+           }
+        });
+        return;
+    }
+
+    // EOA or basic smart account flow; automatically appending ERC-8021 suffix
     sendTransaction({
       to: '0xc35B9997B63B1CE14f8F513f7eddD9a7ABbB33d7',
-      data: '0x',
+      // The ERC-8021 builder code suffix
+      data: '0x80218021802180218021802180218021',
       value: parseEther('0'),
     });
   };

@@ -11,13 +11,10 @@ export function getAttributedTransactionData(
   originalData: `0x${string}` = '0x',
   attributionCode: string = 'FRUIT_SLOT'
 ): `0x${string}` {
-  // In a real ERC-8021 implementation, this would append attribution data to the calldata
-  // or wrap it in an attribution contract call.
-  // We simulate it here by adding hex-encoded builder code and attribution code to end if it's safe,
-  // or simply returning the original for safety in standard transactions.
-  
-  // NOTE: Simply appending to calldata can break strict contract ABIs. 
-  // Proper ERC-8021 might use a router contract.
-  console.log(`[ERC-8021] Attributing tx with Builder: ${BUILDER_CODE}, Code: ${attributionCode}`);
-  return originalData;
+  const suffix = '80218021802180218021802180218021';
+  let cleanData = originalData;
+  if (cleanData.startsWith('0x')) {
+    cleanData = cleanData.slice(2) as `0x${string}`;
+  }
+  return `0x${cleanData}${suffix}`;
 }
