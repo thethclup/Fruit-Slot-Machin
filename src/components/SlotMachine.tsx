@@ -1,20 +1,21 @@
 import { useState, useEffect, useCallback } from 'react';
 import confetti from 'canvas-confetti';
-import { useAccount, useSignMessage, useConnect, useDisconnect, useSendTransaction, useSendCalls, useChainId } from 'wagmi';
-import { parseEther } from 'viem';
+import { useAccount, useSignMessage, useConnect, useDisconnect } from 'wagmi';
 import { useGameStore, MULTIPLIERS, getRandomSymbol } from '../store/gameStore';
 import { Reel } from './Reel';
 import { Leaderboard } from './Leaderboard';
 import { cn } from '../lib/utils';
 import { getAttributedTransactionData, BUILDER_CODE } from '../lib/erc8021';
-import { Wallet, Settings, Zap, History, Trophy, RotateCw, Gamepad2, ListOrdered, MessageSquare } from 'lucide-react';
-import { useWalletCapabilities } from '../hooks/useWalletCapabilities';
+import { BASE_MAINNET_CHAIN_ID } from '../config/wagmi';
+import { useDenimTransaction } from '../hooks/useDenimTransaction';
+import { Wallet, Zap, Trophy, RotateCw, Gamepad2, ListOrdered, MessageSquare, Loader2, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 export function SlotMachine() {
   const { isConnected, address } = useAccount();
   const { signMessageAsync } = useSignMessage();
   const { connectors, connect } = useConnect();
   const { disconnect } = useDisconnect();
+  const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
   
   const { 
     balance, bet, spinning, reels, winAmount, combo, freeSpins, highestWin, fastMode, autoSpin,
@@ -110,57 +111,64 @@ export function SlotMachine() {
     }
   }, [showWin, autoSpin, fastMode]);
 
-  const { sendTransaction } = useSendTransaction();
-  const { sendCalls } = useSendCalls();
-  const chainId = useChainId();
-  const { supportsBatching } = useWalletCapabilities(chainId);
+  const {
+    sendGM,
+    switchToBaseMainnet,
+    isWrongNetwork,
+    isSwitchingChain,
+    isPending: isGmPending,
+    isConfirming: isGmConfirming,
+    isConfirmed: isGmConfirmed,
+    blockNumber: gmBlockNumber,
+    error: gmError,
+  } = useDenimTransaction();
+
+  useEffect(() => {
+    if (gmError) {
+      setToast({ type: 'error', text: gmError });
+    }
+  }, [gmError]);
+
+  useEffect(() => {
+    if (isGmConfirmed) {
+      setToast({
+        type: 'success',
+        text: `GM confirmed on Base Mainnet${gmBlockNumber ? ` (Block #${gmBlockNumber.toString()})` : ''}!`,
+      });
+    }
+  }, [isGmConfirmed, gmBlockNumber]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 4000);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
   const recordOnChain = async () => {
     if (!isConnected) {
-      alert("Please connect wallet first!");
+      setToast({ type: 'info', text: 'Please connect your wallet first.' });
       return;
     }
     try {
-      const msg = `I just won ${winAmount} coins on Fruit Slot\nHighest Win: ${highestWin}\nAttribution: ${BUILDER_CODE}`;
+      if (isWrongNetwork) {
+        await switchToBaseMainnet();
+      }
+      const msg = `I just won ${winAmount} coins on Fruit Slot\nHighest Win: ${highestWin}\nNetwork: Base Mainnet (8453)\nAttribution: ${BUILDER_CODE}`;
       const signature = await signMessageAsync({ message: msg, account: address as any });
       getAttributedTransactionData('0x', 'FRUIT_SLOT_WIN_RECORD');
-      alert(`Win recorded on-chain successfully!\nSig: ${signature.slice(0, 20)}...`);
+      setToast({ type: 'success', text: `Win signed on Base Mainnet! Sig: ${signature.slice(0, 14)}...` });
     } catch (e: any) {
       console.error(e);
-      alert('Failed to record win: ' + e.message);
+      setToast({ type: 'error', text: 'Failed to record win: ' + (e?.shortMessage || e?.message || 'Unknown error') });
     }
   };
 
-  const sayGM = () => {
+  const sayGM = async () => {
     if (!isConnected) {
-      alert("Please connect wallet first!");
+      setToast({ type: 'info', text: 'Please connect your wallet first.' });
       return;
     }
-
-    if (supportsBatching && sendCalls) {
-        sendCalls({
-           calls: [{
-               to: '0xc35B9997B63B1CE14f8F513f7eddD9a7ABbB33d7',
-               data: '0x',
-               value: BigInt(0)
-           }],
-           capabilities: {
-              dataSuffix: {
-                  value: '0x80218021802180218021802180218021',
-                  optional: true
-              }
-           }
-        });
-        return;
-    }
-
-    // EOA or basic smart account flow; automatically appending ERC-8021 suffix
-    sendTransaction({
-      to: '0xc35B9997B63B1CE14f8F513f7eddD9a7ABbB33d7',
-      // The ERC-8021 builder code suffix
-      data: '0x80218021802180218021802180218021',
-      value: parseEther('0'),
-    });
+    await sendGM();
   };
 
   return (
@@ -175,12 +183,29 @@ export function SlotMachine() {
           <span className="text-xl font-mono text-emerald-400 leading-none">{balance.toLocaleString()} 🪙</span>
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+           {isWrongNetwork && (
+             <button
+               onClick={switchToBaseMainnet}
+               disabled={isSwitchingChain}
+               className="px-2.5 py-2 rounded-full bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold text-[11px] border border-amber-400/40 transition-colors flex items-center gap-1 active:scale-95"
+               title="Switch to Base Mainnet (8453)"
+             >
+               <AlertTriangle className="w-3 h-3" />
+               {isSwitchingChain ? 'Switching...' : 'Base Mainnet'}
+             </button>
+           )}
            <button 
              onClick={sayGM}
-             className="p-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+             disabled={isGmPending || isGmConfirming}
+             className="p-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors disabled:opacity-50"
+             title="Say GM on Base Mainnet (200ms)"
            >
-             <MessageSquare className="w-5 h-5 text-gray-300" />
+             {isGmPending || isGmConfirming ? (
+               <Loader2 className="w-5 h-5 text-[#E8A020] animate-spin" />
+             ) : (
+               <MessageSquare className="w-5 h-5 text-gray-300" />
+             )}
            </button>
            <button 
              className="px-3 py-2 rounded-full bg-white/5 hover:bg-white/10 font-bold text-xs text-gray-300 border border-white/10 transition-colors shadow-lg active:scale-95"
@@ -190,13 +215,25 @@ export function SlotMachine() {
            </button>
            <button 
              className="px-3 py-2 rounded-full bg-purple-600/20 hover:bg-purple-600/40 text-purple-400 font-bold text-xs border border-purple-500/30 transition-colors shadow-lg active:scale-95 flex items-center gap-1"
-             onClick={isConnected ? () => disconnect() : () => connect({ connector: connectors[0] })}
+             onClick={isConnected ? () => disconnect() : () => connect({ connector: connectors[0], chainId: BASE_MAINNET_CHAIN_ID })}
            >
              <Wallet className="w-3 h-3" />
              {isConnected ? `${address?.substring(0,6)}...` : 'CONNECT'}
            </button>
         </div>
       </div>
+
+      {toast && (
+        <div className={cn(
+          "fixed top-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-2xl border backdrop-blur-md shadow-xl flex items-center gap-2 text-xs font-semibold max-w-sm",
+          toast.type === 'success' && "bg-emerald-950/90 border-emerald-500/40 text-emerald-200",
+          toast.type === 'error' && "bg-red-950/90 border-red-500/40 text-red-200",
+          toast.type === 'info' && "bg-purple-950/90 border-purple-500/40 text-purple-200"
+        )}>
+          <CheckCircle2 className="w-4 h-4 shrink-0" />
+          <span>{toast.text}</span>
+        </div>
+      )}
 
       {currentTab === 'play' && (
         <div className="relative z-10 flex flex-col items-center w-full max-w-md mt-6 px-4 pb-8">
@@ -210,7 +247,7 @@ export function SlotMachine() {
               {highestWin > 0 ? (
                 <p className="text-[10px] text-purple-400 uppercase tracking-widest font-bold">Highest Win: {highestWin} 🏆</p>
               ) : (
-                <p className="text-[10px] text-purple-400 uppercase tracking-widest font-bold">Base Mainnet Edition</p>
+                <p className="text-[10px] text-purple-400 uppercase tracking-widest font-bold">Base Mainnet · Denim 200ms</p>
               )}
             </div>
           </div>
@@ -331,13 +368,18 @@ export function SlotMachine() {
               </button>
               <button
                 onClick={sayGM}
-                className="w-full p-3 rounded-2xl bg-[#E8A020]/20 border border-[#E8A020]/40 flex flex-col items-center gap-1 hover:bg-[#E8A020]/30 active:scale-95 transition-all backdrop-blur-sm"
+                disabled={isGmPending || isGmConfirming}
+                className="w-full p-3 rounded-2xl bg-[#E8A020]/20 border border-[#E8A020]/40 flex flex-col items-center gap-1 hover:bg-[#E8A020]/30 active:scale-95 transition-all backdrop-blur-sm disabled:opacity-60"
               >
                 <span className="text-[#E8A020] font-black tracking-tighter uppercase flex items-center gap-2 text-md">
-                  <MessageSquare className="w-4 h-4 text-[#E8A020]" />
-                  Say GM
+                  {isGmPending || isGmConfirming ? (
+                    <Loader2 className="w-4 h-4 text-[#E8A020] animate-spin" />
+                  ) : (
+                    <MessageSquare className="w-4 h-4 text-[#E8A020]" />
+                  )}
+                  {isGmPending ? 'Confirm in Wallet...' : isGmConfirming ? 'Confirming (200ms)...' : 'Say GM'}
                 </span>
-                <span className="text-[10px] text-[#E8A020]/70 uppercase font-bold tracking-widest">Base Mainnet 0xc35b...</span>
+                <span className="text-[10px] text-[#E8A020]/70 uppercase font-bold tracking-widest">Base Mainnet (Denim 200ms) 0xc35b...</span>
               </button>
             </div>
           )}
